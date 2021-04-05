@@ -1,0 +1,9 @@
+# binary output directory
+bin/
+plugins/test/bin/
+
+# release binary output directory
+pkg/
+
+# ignore GoLand IDE
+.idea
