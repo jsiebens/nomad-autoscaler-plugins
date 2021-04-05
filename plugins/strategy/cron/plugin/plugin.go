@@ -132,11 +132,16 @@ func (s *StrategyPlugin) calculateTargetCount(config map[string]string, timer fu
 		}
 
 		if strings.HasPrefix(k, runConfigKeyPeriodPrefix) {
-			rule, err := parsePeriodRule(element, s.separator)
+			rule, err := parsePeriodRule(k, element, s.separator)
 			if err != nil {
 				return -1, err
 			}
-			if rule.InPeriod(now) {
+
+			inPeriod := rule.InPeriod(now)
+
+			s.logger.Trace("checking period", "period", rule.period, "in_period", inPeriod, "priority", rule.priority)
+
+			if inPeriod {
 				rules = append(rules, rule)
 			}
 		}
@@ -145,9 +150,11 @@ func (s *StrategyPlugin) calculateTargetCount(config map[string]string, timer fu
 	if len(rules) == 0 {
 		return value, nil
 	} else if len(rules) == 1 {
+		s.logger.Trace("selected period", "period", rules[0].period, "priority", rules[0].priority, "count", rules[0].count)
 		return rules[0].count, nil
 	} else {
 		sort.Sort(RuleSorter(rules))
+		s.logger.Trace("selected period", "period", rules[0].period, "priority", rules[0].priority, "count", rules[0].count)
 		return rules[0].count, nil
 	}
 }

@@ -1,6 +1,12 @@
 SHELL = bash
 default: plugins
 
+.PHONY: test
+test:
+	@echo "==> Testing source code..."
+	@go test ./...
+	@echo "==> Done"
+
 .PHONY: clean-plugins
 clean-plugins:
 	@echo "==> Cleaning plugins..."
