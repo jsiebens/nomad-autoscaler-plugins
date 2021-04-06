@@ -26,6 +26,14 @@ bin/plugins/cron:
 	@cd ./plugins/strategy/cron && go build -o ../../../$@
 	@echo "==> Done"
 
+.PHONY: bin/plugins/do-droplets
+bin/plugins/do-droplets:
+	@echo "==> Building $@..."
+	@mkdir -p $$(dirname $@)
+	@cd ./plugins/target/do-droplets && go build -o ../../../$@
+	@echo "==> Done"
+
 .PHONY: plugins
 plugins: \
-	bin/plugins/cron
+	bin/plugins/cron \
+	bin/plugins/do-droplets
