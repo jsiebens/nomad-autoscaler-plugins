@@ -26,6 +26,13 @@ bin/plugins/cron:
 	@cd ./plugins/strategy/cron && go build -o ../../../$@
 	@echo "==> Done"
 
+.PHONY: bin/plugins/files-apm
+bin/plugins/files-apm:
+	@echo "==> Building $@..."
+	@mkdir -p $$(dirname $@)
+	@cd ./plugins/apm/files-apm && go build -o ../../../$@
+	@echo "==> Done"
+
 .PHONY: bin/plugins/do-droplets
 bin/plugins/do-droplets:
 	@echo "==> Building $@..."
@@ -36,4 +43,5 @@ bin/plugins/do-droplets:
 .PHONY: plugins
 plugins: \
 	bin/plugins/cron \
+	bin/plugins/files-apm \
 	bin/plugins/do-droplets
