@@ -6,6 +6,7 @@ import (
 	"io/ioutil"
 	"os"
 	"strconv"
+	"strings"
 
 	"github.com/digitalocean/godo"
 	"github.com/hashicorp/go-hclog"
@@ -22,12 +23,14 @@ const (
 	// pluginName is the unique name of the this plugin amongst Target plugins.
 	pluginName = "do-droplets"
 
-	configKeyToken             = "token"
-	configKeyRegion            = "region"
-	configKeySize              = "size"
-	configKeyVpc               = "vpc"
-	configKeySnapshotID        = "snapshotID"
-	configKeySshKeyFingerprint = "sshKeyFingerprint"
+	configKeyToken      = "token"
+	configKeyRegion     = "region"
+	configKeySize       = "size"
+	configKeyVpcUUID    = "vpc_uuid"
+	configKeySnapshotID = "snapshot_id"
+	configKeySshKeys    = "ssh_keys"
+	configKeyUserData   = "user_data"
+	configKeyTags       = "tags"
 )
 
 var (
@@ -190,9 +193,9 @@ func (t *TargetPlugin) createDropletTemplate(config map[string]string) (*droplet
 	}
 
 	// We cannot scale droplets without knowing the target VPC.
-	vpc, ok := t.getValue(config, configKeyVpc)
+	vpc, ok := t.getValue(config, configKeyVpcUUID)
 	if !ok {
-		return nil, fmt.Errorf("required config param %s not found", configKeyVpc)
+		return nil, fmt.Errorf("required config param %s not found", configKeyVpcUUID)
 	}
 
 	// We cannot scale droplets without knowing the target node class.
@@ -205,7 +208,9 @@ func (t *TargetPlugin) createDropletTemplate(config map[string]string) (*droplet
 		return nil, fmt.Errorf("invalid value for config param %s", configKeySnapshotID)
 	}
 
-	sshKeyFingerprint, _ := t.getValue(config, configKeySshKeyFingerprint)
+	sshKeyFingerprint, _ := t.getValue(config, configKeySshKeys)
+	tags, _ := t.getValue(config, configKeyTags)
+	userData, _ := t.getValue(config, configKeyUserData)
 
 	// We cannot scale droplets without knowing the target node class.
 	nodeClass, ok := config[sdk.TargetConfigKeyClass]
@@ -214,12 +219,14 @@ func (t *TargetPlugin) createDropletTemplate(config map[string]string) (*droplet
 	}
 
 	return &dropletTemplate{
-		region:            region,
-		size:              size,
-		vpc:               vpc,
-		snapshotID:        int(snapshotID),
-		nodeClass:         nodeClass,
-		sshKeyFingerprint: sshKeyFingerprint,
+		region:     region,
+		size:       size,
+		vpc:        vpc,
+		snapshotID: int(snapshotID),
+		nodeClass:  nodeClass,
+		sshKeys:    strings.Split(sshKeyFingerprint, ","),
+		userData:   userData,
+		tags:       strings.Split(tags, ","),
 	}, nil
 }
 

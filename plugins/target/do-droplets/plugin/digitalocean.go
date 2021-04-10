@@ -3,6 +3,7 @@ package plugin
 import (
 	"context"
 	"fmt"
+	"io/ioutil"
 	"time"
 
 	"github.com/digitalocean/godo"
@@ -16,12 +17,14 @@ const (
 )
 
 type dropletTemplate struct {
-	region            string
-	size              string
-	vpc               string
-	snapshotID        int
-	nodeClass         string
-	sshKeyFingerprint string
+	region     string
+	size       string
+	vpc        string
+	snapshotID int
+	nodeClass  string
+	sshKeys    []string
+	tags       []string
+	userData   string
 }
 
 func (t *TargetPlugin) scaleOut(ctx context.Context, num int64, template *dropletTemplate, config map[string]string) error {
@@ -38,15 +41,19 @@ func (t *TargetPlugin) scaleOut(ctx context.Context, num int64, template *drople
 			Image: godo.DropletCreateImage{
 				ID: template.snapshotID,
 			},
-			Tags: []string{template.nodeClass},
+			Tags: append(template.tags, template.nodeClass),
 		}
 
-		if len(template.sshKeyFingerprint) != 0 {
-			createRequest.SSHKeys = []godo.DropletCreateSSHKey{
-				{
-					Fingerprint: template.sshKeyFingerprint,
-				},
+		if len(template.sshKeys) != 0 {
+			createRequest.SSHKeys = sshKeyMap(template.sshKeys)
+		}
+
+		if len(template.userData) != 0 {
+			content, err := ioutil.ReadFile(template.userData)
+			if err != nil {
+				return fmt.Errorf("failed to scale out DigitalOcean droplets: %v", err)
 			}
+			createRequest.UserData = string(content)
 		}
 
 		_, _, err := t.client.Droplets.Create(ctx, createRequest)
@@ -208,4 +215,14 @@ func doDropletNodeIDMap(n *api.Node) (string, error) {
 		return "", fmt.Errorf("attribute %q not found", "unique.hostname")
 	}
 	return val, nil
+}
+
+func sshKeyMap(input []string) []godo.DropletCreateSSHKey {
+	var result []godo.DropletCreateSSHKey
+
+	for _, v := range input {
+		result = append(result, godo.DropletCreateSSHKey{Fingerprint: v})
+	}
+
+	return result
 }
