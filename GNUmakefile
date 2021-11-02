@@ -33,15 +33,7 @@ bin/plugins/files-apm:
 	@cd ./plugins/apm/files-apm && go build -o ../../../$@
 	@echo "==> Done"
 
-.PHONY: bin/plugins/do-droplets
-bin/plugins/do-droplets:
-	@echo "==> Building $@..."
-	@mkdir -p $$(dirname $@)
-	@cd ./plugins/target/do-droplets && go build -o ../../../$@
-	@echo "==> Done"
-
 .PHONY: plugins
 plugins: \
 	bin/plugins/cron \
-	bin/plugins/files-apm \
-	bin/plugins/do-droplets
+	bin/plugins/files-apm
