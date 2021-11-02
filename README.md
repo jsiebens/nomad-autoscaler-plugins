@@ -15,8 +15,6 @@ job "webapp" {
       ...
       policy {
         check "business hours" {
-          source = "prometheus"
-
           strategy "cron" {
             count = 2
             period_business = "* * 9-17 * * mon-fri * -> 5"
